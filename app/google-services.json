@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "200694958344",
+    "project_id": "smarthomegesturecontrol",
+    "storage_bucket": "smarthomegesturecontrol.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:200694958344:android:efd8834c6af8e8ace684bd",
+        "android_client_info": {
+          "package_name": "com.example.smarthomegesturecontrol"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "200694958344-ilg823gj81jduig8bkvrg3s2dtaelagd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuhqYGWdlNy7FVrmQGn2tj5_RX0_d_tYI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "200694958344-ilg823gj81jduig8bkvrg3s2dtaelagd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
