@@ -13,14 +13,20 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="true"
             />
-
-
         <Button
-            android:id="@+id/button"
-            android:layout_width="match_parent"
+            android:id="@+id/replay"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
+            android:text="Replay" />
+
+        <Button
+            android:id="@+id/capture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
             android:text="PRACTICE" />
 
 </RelativeLayout>

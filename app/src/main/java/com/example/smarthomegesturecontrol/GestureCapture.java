@@ -2,7 +2,6 @@ package com.example.smarthomegesturecontrol;
 
 import android.Manifest;
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -16,21 +15,12 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.Toast;
-
-
 import java.io.File;
-import java.util.HashMap;
-
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -39,6 +29,7 @@ public class GestureCapture extends MainActivity {
     Button uploadBtn;
     int Counter = 0;
     int gestureType;
+    File mediaFile;
     private static int CAMERA_PERMISSION_CODE = 100;
     private static int VIDEO_RECORD_CODE = 101;
     private static int MEDIA_TYPE_VIDEO = 102;
@@ -82,54 +73,56 @@ public class GestureCapture extends MainActivity {
         });
     }
 
-//    private String filetype() {
-//        ContentResolver r = getContentResolver();
-//        // get the file type ,in this case its mp4
-//        MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
-//        return mimeTypeMap.getExtensionFromMimeType(r.getType(fileUri));
-//    }
-
+    /**
+     * This method uploads to firebase server
+     */
     private void uploadVideo() {
         progressDialog.setTitle("Uploading...");
         progressDialog.show();
-        if (fileUri != null) {
-            // save the selected video in Firebase storage
-            String fileName = getVideoName(gestureType);
-            String fileType = ".mp4";
-            // Create instance of StorageReference
-            StorageReference storageRef = FirebaseStorage.getInstance().getReference();
-            final StorageReference photoRef = storageRef.child("FolderToCreate").child("NameYoWantToAdd");
-// add File/URI
-            photoRef.putFile(fileUri)
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            // Upload succeeded
-                            Toast.makeText(getApplicationContext(), "Upload Success...", Toast.LENGTH_SHORT).show();
+        if (fileUri != null) { String fileName = getVideoName(gestureType);
+           String fileType = ".mp4";
+           String completeFileName = fileName + fileType;
+           FirebaseStorage storage = FirebaseStorage.getInstance();
+           StorageReference storageRef = storage.getReference();
+           storageRef = storageRef.child("/videos/" + "/" + completeFileName);
 
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            // Upload failed
-                            Toast.makeText(getApplicationContext(), "Upload failed...", Toast.LENGTH_SHORT).show();
-                        }
-                    }).addOnProgressListener(
-                    new OnProgressListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                            //calculating progress percentage
-                            double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+           UploadTask uploadTask = storageRef.putFile(fileUri);
+            uploadTask.addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    // Upload succeeded
+                    Log.d("SUCCESSFULLY DONE", "uploadFromUri:onSuccess");
+                    // Get the public download URL
+                    String mDownloadUrl = taskSnapshot.getMetadata().getPath();
+                    Log.i("PATH",  mDownloadUrl);
+                    progressDialog.hide();
+                    Toast.makeText(GestureCapture.this, "Successfully done", Toast.LENGTH_SHORT).show();
+                    Intent returnBtn = new Intent(getApplicationContext(),
+                            MainActivity.class);
 
-                            //displaying percentage in progress dialog
-                            progressDialog.setMessage("Uploaded " + ((int) progress) + "%...");
-                        }
-                    });
+                    startActivity(returnBtn);
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    progressDialog.hide();
+                    Log.w("EXCEPTION", "uploadFromUri:onFailure", e);
+                    Toast.makeText(GestureCapture.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Intent returnBtn = new Intent(getApplicationContext(),
+                            MainActivity.class);
+
+                    startActivity(returnBtn);
+                }
+            });
+
         }
     }
 
-
+    /**
+     * This method returns videoName based on gesture selection
+     * @param  gestureSelection  dropdown selection user did on Main activity
+     * @return gestureName based on gestureSelection
+     */
 
     private String getVideoName(int gestureSelection) {
         String gestureName = "";
@@ -191,6 +184,10 @@ public class GestureCapture extends MainActivity {
         return  gestureName;
     }
 
+    /**
+     * This method checks if camera is available or not
+     * @return boolean value as true or false
+     */
     private boolean isCameraAvailable(){
         if (getPackageManager().hasSystemFeature(
                 PackageManager.FEATURE_CAMERA_ANY)) {
@@ -199,29 +196,40 @@ public class GestureCapture extends MainActivity {
         }
     }
 
+    /**
+     * This method request for camera permissions
+     */
     private void getCameraPermission() {
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);
         }
     }
 
+    /**
+     * This method starts capturing recording from video camera
+     */
     private void startVideoCapture(){
         Counter++;
         fileUri = getOutputMediaFileUri(MEDIA_TYPE_VIDEO);
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
         intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 5);
-       // intent.putExtra("android.intent.extras.CAMERA_FACING", cameraId());
+        intent.putExtra("android.intent.extras.CAMERA_FACING", 1);
         intent.putExtra(MediaStore.Video.Media.DISPLAY_NAME, getVideoName(gestureType));
         startActivityForResult(intent, VIDEO_RECORD_CODE);
     }
 
+    /**
+     * This method get Uri from File
+     * @param  type  is a Media type for Either image or video
+     */
     public Uri getOutputMediaFileUri(int type) {
         return Uri.fromFile(getOutputMediaFile(type));
     }
 
     /*
-     * returning image / video
+     * This method return mediaFile url
+     *  * @param  type  is a Media type for Either image or video
      */
     private  File getOutputMediaFile(int type) {
         String videoName = getVideoName(gestureType);
@@ -230,7 +238,6 @@ public class GestureCapture extends MainActivity {
                 Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
                 VIDEO_DIRECTORY_NAME);
-
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
@@ -240,7 +247,7 @@ public class GestureCapture extends MainActivity {
             }
         }
 
-        File mediaFile;
+
         if (type == MEDIA_TYPE_IMAGE) {
             mediaFile = new File(mediaStorageDir.getPath() + File.separator
                     + "IMG_" + videoName + ".jpg");
@@ -260,7 +267,9 @@ public class GestureCapture extends MainActivity {
         if(requestCode == VIDEO_RECORD_CODE) {
             if(resultCode == RESULT_OK) {
                 String videoPath = fileUri.getPath();
+                fileUri = data.getData();
                 Log.i("VIDEO_RECORD_TAG", "Video recorded at path" + videoPath);
+                Log.i("VIDEO_RECORD_TAG_ACTUAL", "ACTUAL Video recorded at path" + fileUri);
             }
             else if(resultCode == RESULT_CANCELED) {
                 Log.i("VIDEO_RECORD_TAG", "Recording video Cancelled");

@@ -26,7 +26,7 @@ public class GestureDisplay extends MainActivity {
         gestureType = extras.getInt("gestureType");
         setGestureVideo(gestureType);
 
-        captureBtn = (Button) findViewById(R.id.button);
+        captureBtn = (Button) findViewById(R.id.capture);
         captureBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -36,8 +36,20 @@ public class GestureDisplay extends MainActivity {
             }
         });
 
+        captureBtn = (Button) findViewById(R.id.replay);
+        captureBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setGestureVideo(gestureType);
+            }
+        });
+
     }
 
+    /**
+     * This method display videos based on selection made on Activity Screen
+     * @param  gestureSelection  dropdown selection user did on Main activity
+     */
     void setGestureVideo(int gestureSelection) {
         switch (gestureSelection) {
             case 1:
@@ -115,8 +127,9 @@ public class GestureDisplay extends MainActivity {
 
     void playVideo(VideoView videoView) {
         mediaController.setAnchorView(videoView);
+        mediaController.setVisibility(View.GONE);
         videoView.setMediaController(mediaController);
-        videoView.requestFocus();
+        //videoView.requestFocus();
         videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {

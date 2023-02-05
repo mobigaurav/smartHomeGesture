@@ -35,15 +35,5 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-//        mySpinner.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                    if(i != 0) {
-//                        Intent intent = new Intent(MainActivity.this,GestureDisplay.class);
-//                        intent.putExtra("gestureType", i);
-//                        startActivity(intent);
-//                    }
-//            }
-//        });
     }
 }
